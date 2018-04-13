@@ -1,7 +1,7 @@
 'use strict'
 
 const readline = require('readline')
-var readInterface = readline.createInterface({
+let readInterface = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
@@ -21,10 +21,16 @@ if (!String.prototype.format) {
 
 let tasks = []
 
+function displayTasks(){
+    tasks.map((task, index) => {
+        console.log('{0}. {1} - {2}'.format(index, task.name, task.time))
+    })
+}
+
 function addTask() {
     readInterface.question('Enter task name: ', name => {
         tasks.push({'name': name, 'time': 0})
-        console.log(tasks)
+        displayTasks()
     })
 }
 
