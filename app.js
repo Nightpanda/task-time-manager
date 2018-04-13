@@ -31,10 +31,20 @@ function intervalFunc(index) {
     tasks[index].time += 1
 }
 
+function stopRunningTaskTimers() {
+    tasks.map(task => {
+        if(task.timerRunning) {
+            clearInterval(task.timer)
+            task.timerRunning = !task.timerRunning
+        }
+    })
+}
+
 function addTask() {
+    stopRunningTaskTimers()
     readInterface.question('Enter task name: ', name => {
-        const index = tasks.push({'name': name, 'time': 0}) - 1
-        tasks[index].index = setInterval(intervalFunc, 1000, index)
+        const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true}) - 1
+        tasks[index].timer = setInterval(intervalFunc, 1000, index)
         displayTasks()
     })
 }
