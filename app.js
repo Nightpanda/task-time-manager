@@ -57,12 +57,28 @@ function stopAllTasks() {
 }
 
 function resumeTask() {
-    console.log("RESUME")
+    readInterface.question('Give the index number of the task to resume timing: ', taskIndex => {
+        let task = tasks[taskIndex]
+        if (task) {
+            const running = task.timerRunning
+            const taskName = task.name
+            if (!running) {
+                task.timerRunning = !running
+                task.timer = setInterval(intervalFunc, 1000, taskIndex)
+                clearAndDisplayHelpAndTasks()
+                console.log('Resumed task {0}'.format(taskName))
+            } else {
+                console.log('Timer already running for {0}'.format(taskName))
+            }
+        } else {
+            console.log('No task found for index {0}'.format(taskIndex))
+        }
+    })
 }
 
 const userInputs = {
     'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
-    'r': {'description': 'resume', 'command': function() {resumeTask()}},
+    'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
     's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}}}
 
 function listAvailableCommands(commands) {
