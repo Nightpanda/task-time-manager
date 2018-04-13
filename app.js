@@ -36,6 +36,7 @@ function stopRunningTaskTimers() {
         if(task.timerRunning) {
             clearInterval(task.timer)
             task.timerRunning = !task.timerRunning
+            console.log('Stopped timer for task {0}'.format(task.name))
         }
     })
 }
@@ -49,9 +50,10 @@ function addTask() {
     })
 }
 
-function stopTask() {
-    clearInterval(tasks[0].timer)
-    console.log("STOP")
+function stopAllTasks() {
+    clearAndDisplayHelpAndTasks()
+    stopRunningTaskTimers()
+    console.log("Finished stopping timers.")
 }
 
 function resumeTask() {
@@ -59,9 +61,9 @@ function resumeTask() {
 }
 
 const userInputs = {
-    'a': {'description': 'add', 'command': function() {addTask()}},
+    'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
     'r': {'description': 'resume', 'command': function() {resumeTask()}},
-    's': {'description': 'stop', 'command': function() {stopTask()}}}
+    's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
