@@ -1,5 +1,10 @@
+'use strict'
+
 const readline = require('readline')
-readline.emitKeypressEvents(process.stdin)
+var readInterface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
 process.stdin.setRawMode(true)
 
 if (!String.prototype.format) {
@@ -14,10 +19,27 @@ if (!String.prototype.format) {
   };
 }
 
+let tasks = []
+
+function addTask() {
+    readInterface.question('Enter task name: ', name => {
+        tasks.push({'name': name, 'time': 0})
+        console.log(tasks)
+    })
+}
+
+function stopTask() {
+    console.log("STOP")
+}
+
+function resumeTask() {
+    console.log("RESUME")
+}
+
 const userInputs = {
-    'a': {'description': 'add', 'command': 'ADD'},
-    'r': {'description': 'resume', 'command':'RESUME'},
-    's': {'description': 'stop', 'command':'STOP'}}
+    'a': {'description': 'add', 'command': function() {addTask()}},
+    'r': {'description': 'resume', 'command': function() {resumeTask()}},
+    's': {'description': 'stop', 'command': function() {stopTask()}}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
@@ -28,15 +50,19 @@ function listAvailableCommands(commands) {
     }
 }
 
-process.stdin.on('keypress', (str, key) => {
-    if (key.ctrl && key.name === 'c') {
-        process.exit()
-    } else if (userInputs[str]) {
+readInterface.on('line', (str) => {
+    if (userInputs[str]) {
         const command = userInputs[str]
-        console.log(`Running command "${command.command}"`)
+        console.log(`Running command "${command.description}"`)
+        command.command()
     } else {
-        console.log(`No command found for "${str}" key`)
+        console.log(`No command found for "${str}"`)
     }
+    readInterface.prompt()
+}).on('close', () => {
+    console.log('Goodbye')
+    process.exit(0)
 })
 
 listAvailableCommands(userInputs)
+readInterface.prompt()
