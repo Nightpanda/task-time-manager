@@ -45,7 +45,7 @@ function addTask() {
     readInterface.question('Enter task name: ', name => {
         const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true}) - 1
         tasks[index].timer = setInterval(intervalFunc, 1000, index)
-        displayTasks()
+        clearAndDisplayHelpAndTasks()
     })
 }
 
@@ -72,7 +72,17 @@ function listAvailableCommands(commands) {
     }
 }
 
-readInterface.on('line', (str) => {
+function clearScreen() {
+    console.log('\u001B[2J\u001B[0;0f')
+}
+
+function clearAndDisplayHelpAndTasks(){
+    clearScreen()
+    listAvailableCommands(userInputs)
+    displayTasks()
+}
+
+function handleInput(str) {
     if (userInputs[str]) {
         const command = userInputs[str]
         console.log(`Running command "${command.description}"`)
@@ -80,11 +90,16 @@ readInterface.on('line', (str) => {
     } else {
         console.log(`No command found for "${str}"`)
     }
+}
+
+readInterface.on('line', (str) => {
+    clearAndDisplayHelpAndTasks()
+    handleInput(str)
     readInterface.prompt()
 }).on('close', () => {
     console.log('Goodbye')
     process.exit(0)
 })
 
-listAvailableCommands(userInputs)
+clearAndDisplayHelpAndTasks()
 readInterface.prompt()
