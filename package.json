@@ -1,0 +1,19 @@
+{
+  "name": "task-time-manager",
+  "version": "1.0.0",
+  "description": "Helper for tracking time between differents tasks.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nightpanda/task-time-manager.git"
+  },
+  "author": "Pekka Tiilikainen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nightpanda/task-time-manager/issues"
+  },
+  "homepage": "https://github.com/Nightpanda/task-time-manager#readme"
+}
