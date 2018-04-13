@@ -27,14 +27,19 @@ function displayTasks(){
     })
 }
 
+function intervalFunc(name) {
+    console.log(name)
+}
+
 function addTask() {
     readInterface.question('Enter task name: ', name => {
-        tasks.push({'name': name, 'time': 0})
+        tasks.push({'name': name, 'time': 0, 'timer': setInterval(intervalFunc, 1000, name)})
         displayTasks()
     })
 }
 
 function stopTask() {
+    clearInterval(tasks[0].timer)
     console.log("STOP")
 }
 
