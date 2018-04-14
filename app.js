@@ -114,12 +114,33 @@ function displayReport(tasks) {
     })
 }
 
+function deleteTask(){
+    readInterface.question('Give the index number of the task to delete: ', taskIndex => {
+        let task = findTaskByIndex(taskIndex)
+        if (task) {
+            const taskName = task.name
+            console.log('Deleting task {0}'.format(taskName))
+            readInterface.question('Are you sure? y/n: ', response => {
+                if (response === 'y'){
+                    clearInterval(task.timer)
+                    delete tasks[taskIndex]
+                    clearAndDisplayHelpAndTasks()
+                    console.log('Task {0} deleted!'.format(taskName))
+                } else {
+                    console.log('Task delete aborted.')
+                }
+            })
+        }
+    })
+}
+
 const userInputs = {
     'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
     'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
     's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}},
-    'n': {description: 'Adds a note to a task', command: () => addNote()},
-    'p': {description: 'Prints a task report of time taken with notes', command: () => displayReport(tasks)}}
+    'n': {description: 'Adds a note to a task.', command: () => addNote()},
+    'p': {description: 'Prints a task report of time taken with notes.', command: () => displayReport(tasks)},
+    'd': {description: 'Deletes a task.', command: () => deleteTask()}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
