@@ -44,7 +44,7 @@ function stopRunningTaskTimers() {
 function addTask() {
     stopRunningTaskTimers()
     readInterface.question('Enter task name: ', name => {
-        const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true}) - 1
+        const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true, 'notes': []}) - 1
         tasks[index].timer = setInterval(intervalFunc, 1000, index)
         clearAndDisplayHelpAndTasks()
     })
@@ -56,9 +56,18 @@ function stopAllTasks() {
     console.log("Finished stopping timers.")
 }
 
+function findTaskByIndex(taskIndex) {
+    let task = tasks[taskIndex]
+    if (task) {
+        return task
+    } else {
+        console.log('No task found for index {0}'.format(taskIndex))
+    }
+}
+
 function resumeTask() {
     readInterface.question('Give the index number of the task to resume timing: ', taskIndex => {
-        let task = tasks[taskIndex]
+        let task = findTaskByIndex(taskIndex)
         if (task) {
             const running = task.timerRunning
             const taskName = task.name
@@ -70,8 +79,21 @@ function resumeTask() {
             } else {
                 console.log('Timer already running for {0}'.format(taskName))
             }
-        } else {
-            console.log('No task found for index {0}'.format(taskIndex))
+        }
+    })
+}
+
+function addNote() {
+    readInterface.question('Give the index number of the task to add a note to: ', taskIndex => {
+        let task = findTaskByIndex(taskIndex)
+        if (task) {
+            const taskName = task.name
+            readInterface.question('Write the note to add to the task {0}: '.format(taskName), note => {
+                task.notes.push(note)
+                clearAndDisplayHelpAndTasks()
+                console.log('Task {0} now has notes:'.format(taskName))
+                task.notes.map(taskNote => console.log(taskNote))
+            })
         }
     })
 }
@@ -79,7 +101,8 @@ function resumeTask() {
 const userInputs = {
     'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
     'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
-    's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}}}
+    's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}},
+    'n': {description: 'Adds a note to a task', command: () => addNote()}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
