@@ -98,11 +98,28 @@ function addNote() {
     })
 }
 
+function secondsToHours(seconds) {
+    return seconds / 3600
+}
+
+function displayReport(tasks) {
+    clearAndDisplayHelpAndTasks()
+    tasks.map(task => {
+        console.log('Task: {0}'.format(task.name))
+        console.log('Time taken {0}'.format(secondsToHours(task.time)))
+        console.log('Notes:')
+        task.notes.map(note => {
+            console.log(note)
+        })
+    })
+}
+
 const userInputs = {
     'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
     'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
     's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}},
-    'n': {description: 'Adds a note to a task', command: () => addNote()}}
+    'n': {description: 'Adds a note to a task', command: () => addNote()},
+    'p': {description: 'Prints a task report of time taken with notes', command: () => displayReport(tasks)}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
