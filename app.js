@@ -1,4 +1,5 @@
 'use strict'
+const fs = require('fs')
 
 const readline = require('readline')
 let readInterface = readline.createInterface({
@@ -134,13 +135,31 @@ function deleteTask(){
     })
 }
 
+function writeTask(){
+    const stringTasks = tasks.filter(task => task !== (undefined || null || '')).map(task => {
+        let timerlessTask = task
+        delete timerlessTask.timer
+        return JSON.stringify(timerlessTask)
+    })
+    readInterface.question('What is the filename to write to? ', filename => {
+        fs.writeFile('./{0}'.format(filename), stringTasks, (error) => {
+            if (error) {
+                return console.log(error)
+            }
+            clearAndDisplayHelpAndTasks()
+            console.log('Currents tasks saved as a file: {0}'.format(filename))
+        })
+    })
+}
+
 const userInputs = {
     'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
     'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
     's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}},
     'n': {description: 'Adds a note to a task.', command: () => addNote()},
     'p': {description: 'Prints a task report of time taken with notes.', command: () => displayReport(tasks)},
-    'd': {description: 'Deletes a task.', command: () => deleteTask()}}
+    'd': {description: 'Deletes a task.', command: () => deleteTask()},
+    'w': {description: 'Save tasks to a file.', command: () => writeTask()}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
