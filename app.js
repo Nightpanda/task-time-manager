@@ -20,6 +20,8 @@ if (!String.prototype.format) {
   };
 }
 
+let autosaver = {status: false}
+
 let tasks = []
 
 function displayTasks(){
@@ -135,21 +137,43 @@ function deleteTask(){
     })
 }
 
-function writeTask(){
+function saveTasksToFile(filename) {
     const stringTasks = tasks.filter(task => task !== (undefined || null || '')).map(task => {
         let timerlessTask = task
         delete timerlessTask.timer
         return JSON.stringify(timerlessTask)
     })
-    readInterface.question('What is the filename to write to? ', filename => {
-        fs.writeFile('./{0}'.format(filename), stringTasks, (error) => {
-            if (error) {
-                return console.log(error)
-            }
-            clearAndDisplayHelpAndTasks()
-            console.log('Currents tasks saved as a file: {0}'.format(filename))
-        })
+    fs.writeFile('./{0}'.format(filename), stringTasks, (error) => {
+        if (error) {
+            return console.log(error)
+        }
+        clearAndDisplayHelpAndTasks()
+        console.log('Currents tasks saved as a file: {0}'.format(filename))
     })
+}
+
+function writeTasks() {
+    readInterface.question('What is the filename to write to? ', filename => {
+        saveTasksToFile(filename)
+    })
+}
+
+function autosave() {
+    const filename = 'autosave{0}'.format(Date.now())
+    saveTasksToFile(filename)
+}
+
+function switchAutosave() {
+    autosaver.status = !autosaver.status
+    if (autosaver.status) {
+        readInterface.question('What is the autosave interval in milliseconds (30000ms = 30s)? ', interval => {
+            autosaver.timer = setInterval(autosave, interval)
+        })
+    } else {
+        clearInterval(autosaver.timer)
+    }
+
+    clearAndDisplayHelpAndTasks()
 }
 
 const userInputs = {
@@ -159,7 +183,8 @@ const userInputs = {
     'n': {description: 'Adds a note to a task.', command: () => addNote()},
     'p': {description: 'Prints a task report of time taken with notes.', command: () => displayReport(tasks)},
     'd': {description: 'Deletes a task.', command: () => deleteTask()},
-    'w': {description: 'Save tasks to a file.', command: () => writeTask()}}
+    'w': {description: 'Save tasks to a file.', command: () => writeTasks()},
+    'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
 
 function listAvailableCommands(commands) {
     console.log('Available commands')
@@ -174,9 +199,15 @@ function clearScreen() {
     console.log('\u001B[2J\u001B[0;0f')
 }
 
+function displayAutosaveStatus(){
+    const status = autosaver.status ? 'on' : 'off'
+    console.log('Autosave status: {0}'.format(status))
+}
+
 function clearAndDisplayHelpAndTasks(){
     clearScreen()
     listAvailableCommands(userInputs)
+    displayAutosaveStatus()
     displayTasks()
 }
 
