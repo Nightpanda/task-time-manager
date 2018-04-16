@@ -1,12 +1,6 @@
 'use strict'
 const fs = require('fs')
-
 const readline = require('readline')
-let readInterface = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-process.stdin.setRawMode(true)
 
 if (!String.prototype.format) {
   String.prototype.format = function() {
@@ -21,10 +15,24 @@ if (!String.prototype.format) {
 }
 
 let autosaver = {status: false}
-
 let tasks = []
+let readInterface = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-function displayTasks(){
+readInterface.on('line', (str) => {
+    clearAndDisplayHelpAndTasks(tasks)
+    handleInput(str)
+    readInterface.prompt()
+}).on('close', () => {
+    console.log('Goodbye')
+    process.exit(0)
+})
+readInterface.pause()
+process.stdin.setRawMode(true)
+
+function displayTasks(tasks){
     tasks.map((task, index) => {
         console.log('{0}. {1} - {2}'.format(index, task.name, task.time))
     })
@@ -34,28 +42,29 @@ function intervalFunc(index) {
     tasks[index].time += 1
 }
 
-function stopRunningTaskTimers() {
-    tasks.map(task => {
+function stopRunningTaskTimers(tasks) {
+    return tasks.map(task => {
         if(task.timerRunning) {
             clearInterval(task.timer)
             task.timerRunning = !task.timerRunning
             console.log('Stopped timer for task {0}'.format(task.name))
         }
+        return task
     })
 }
 
 function addTask() {
-    stopRunningTaskTimers()
+    tasks = stopRunningTaskTimers(tasks)
     readInterface.question('Enter task name: ', name => {
         const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true, 'notes': []}) - 1
         tasks[index].timer = setInterval(intervalFunc, 1000, index)
-        clearAndDisplayHelpAndTasks()
+        clearAndDisplayHelpAndTasks(tasks)
     })
 }
 
-function stopAllTasks() {
-    clearAndDisplayHelpAndTasks()
-    stopRunningTaskTimers()
+function stopAllTasks(tasks) {
+    clearAndDisplayHelpAndTasks(tasks)
+    tasks = stopRunningTaskTimers(tasks)
     console.log("Finished stopping timers.")
 }
 
@@ -77,7 +86,7 @@ function resumeTask() {
             if (!running) {
                 task.timerRunning = !running
                 task.timer = setInterval(intervalFunc, 1000, taskIndex)
-                clearAndDisplayHelpAndTasks()
+                clearAndDisplayHelpAndTasks(tasks)
                 console.log('Resumed task {0}'.format(taskName))
             } else {
                 console.log('Timer already running for {0}'.format(taskName))
@@ -93,7 +102,7 @@ function addNote() {
             const taskName = task.name
             readInterface.question('Write the note to add to the task {0}: '.format(taskName), note => {
                 task.notes.push(note)
-                clearAndDisplayHelpAndTasks()
+                clearAndDisplayHelpAndTasks(tasks)
                 console.log('Task {0} now has notes:'.format(taskName))
                 task.notes.map(taskNote => console.log(taskNote))
             })
@@ -106,7 +115,7 @@ function secondsToHours(seconds) {
 }
 
 function displayReport(tasks) {
-    clearAndDisplayHelpAndTasks()
+    clearAndDisplayHelpAndTasks(tasks)
     tasks.map(task => {
         console.log('Task: {0}'.format(task.name))
         console.log('Time taken {0}'.format(secondsToHours(task.time)))
@@ -127,7 +136,7 @@ function deleteTask(){
                 if (response === 'y'){
                     clearInterval(task.timer)
                     delete tasks[taskIndex]
-                    clearAndDisplayHelpAndTasks()
+                    clearAndDisplayHelpAndTasks(tasks)
                     console.log('Task {0} deleted!'.format(taskName))
                 } else {
                     console.log('Task delete aborted.')
@@ -147,7 +156,7 @@ function saveTasksToFile(filename) {
         if (error) {
             return console.log(error)
         }
-        clearAndDisplayHelpAndTasks()
+        clearAndDisplayHelpAndTasks(tasks)
         console.log('Currents tasks saved as a file: {0}'.format(filename))
     })
 }
@@ -173,15 +182,15 @@ function switchAutosave() {
         clearInterval(autosaver.timer)
     }
 
-    clearAndDisplayHelpAndTasks()
+    clearAndDisplayHelpAndTasks(tasks)
 }
 
 const userInputs = {
-    'a': {'description': 'Start tracking a new task.', 'command': function() {addTask()}},
-    'r': {'description': 'Resumes a timer on a task.', 'command': function() {resumeTask()}},
-    's': {'description': 'Stops all timers. ', 'command': function() {stopAllTasks()}},
+    'a': {description: 'Start tracking a new task.', command: () => addTask()},
+    'r': {description: 'Resumes a timer on a task.', command: () => resumeTask()},
+    's': {description: 'Stops all timers. ', command: tasks => stopAllTasks(tasks)},
     'n': {description: 'Adds a note to a task.', command: () => addNote()},
-    'p': {description: 'Prints a task report of time taken with notes.', command: () => displayReport(tasks)},
+    'p': {description: 'Prints a task report of time taken with notes.', command: tasks => displayReport(tasks)},
     'd': {description: 'Deletes a task.', command: () => deleteTask()},
     'w': {description: 'Save tasks to a file.', command: () => writeTasks()},
     'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
@@ -204,31 +213,29 @@ function displayAutosaveStatus(){
     console.log('Autosave status: {0}'.format(status))
 }
 
-function clearAndDisplayHelpAndTasks(){
+function clearAndDisplayHelpAndTasks(tasks){
     clearScreen()
     listAvailableCommands(userInputs)
     displayAutosaveStatus()
-    displayTasks()
+    displayTasks(tasks)
 }
 
 function handleInput(str) {
     if (userInputs[str]) {
         const command = userInputs[str]
         console.log(`Running command "${command.description}"`)
-        command.command()
+        command.command(tasks)
     } else {
         console.log(`No command found for "${str}"`)
     }
 }
 
-readInterface.on('line', (str) => {
-    clearAndDisplayHelpAndTasks()
-    handleInput(str)
+function runManager() {
+    readInterface.resume()
+    clearAndDisplayHelpAndTasks(tasks)
     readInterface.prompt()
-}).on('close', () => {
-    console.log('Goodbye')
-    process.exit(0)
-})
+}
 
-clearAndDisplayHelpAndTasks()
-readInterface.prompt()
+module.exports = {runManager: () => runManager(),
+                  stopRunningTaskTimers: tasks => stopRunningTaskTimers(tasks),
+                  secondsToHours: () => secondsToHours()}

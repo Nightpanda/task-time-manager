@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Helper for tracking time between differents tasks.",
   "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scripts": {
+        "start": "node -e 'require(\"./app.js\").runManager()'",
+        "test": "nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/Nightpanda/task-time-manager/issues"
   },
-  "homepage": "https://github.com/Nightpanda/task-time-manager#readme"
+  "homepage": "https://github.com/Nightpanda/task-time-manager#readme",
+  "devDependencies": {
+    "chai": "4.1.2",
+    "mocha": "5.1.0",
+    "nyc": "11.6.0"
+  }
 }
