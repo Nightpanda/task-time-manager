@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('fs')
 const readline = require('readline')
+const chalk = require('chalk')
 
 if (!String.prototype.format) {
   String.prototype.format = function() {
@@ -22,24 +23,38 @@ let readInterface = readline.createInterface({
     output: process.stdout
 });
 
+const header = chalk.bold.white.bgRed
+const descriptionStyle = chalk.green
+const shortcutStyle = chalk.bgBlue.white
+const infoStyle = chalk.bgYellow.black
+const warningStyle = chalk.yellow
+const successStyle = chalk.bgGreen.white
+const questionStyle = chalk.gray
+
+const log = console.log
+const thickHorizontalLine = '━'
+
 readInterface.on('line', (str) => {
     if (str != 'l' && liveMode.status == true) {
-        console.log('Livefeed is on, commands are disabled. Disable with l and enter')
+        log(warningStyle('Livefeed is on, commands are disabled. Disable with l and enter'))
     } else {
         clearAndDisplayHelpAndTasks(tasks)
         handleInput(str)
     }
     readInterface.prompt()
 }).on('close', () => {
-    console.log('Goodbye')
+    log(chalk.inverse('Goodbye'))
     process.exit(0)
 })
 readInterface.pause()
 process.stdin.setRawMode(true)
 
 function displayTasks(tasks){
+    log(header('Tasks'))
+    drawTerminalHorizontalLine(thickHorizontalLine)
     tasks.map((task, index) => {
-        console.log('{0}. {1} - {2}'.format(index, task.name, task.time))
+        log('{0}. {1} - {2}'.format(chalk.bgYellow.blue(index), chalk.green(task.name), chalk.cyan(task.time)))
+        drawTerminalHorizontalLine(thickHorizontalLine)
     })
 }
 
@@ -52,7 +67,7 @@ function stopRunningTaskTimers(tasks) {
         if(task.timerRunning) {
             clearInterval(task.timer)
             task.timerRunning = !task.timerRunning
-            console.log('Stopped timer for task {0}'.format(task.name))
+            log(successStyle('Stopped timer for task {0}'.format(task.name)))
         }
         return task
     })
@@ -60,7 +75,7 @@ function stopRunningTaskTimers(tasks) {
 
 function addTask() {
     tasks = stopRunningTaskTimers(tasks)
-    readInterface.question('Enter task name: ', name => {
+    readInterface.question(questionStyle('Enter task name: '), name => {
         const index = tasks.push({'name': name, 'time': 0, 'timerRunning': true, 'notes': []}) - 1
         tasks[index].timer = setInterval(intervalFunc, 1000, index)
         clearAndDisplayHelpAndTasks(tasks)
@@ -70,7 +85,7 @@ function addTask() {
 function stopAllTasks(tasks) {
     clearAndDisplayHelpAndTasks(tasks)
     tasks = stopRunningTaskTimers(tasks)
-    console.log("Finished stopping timers.")
+    log(successStyle("Finished stopping timers."))
 }
 
 function applyToTaskByIndex(tasks, index, method, ...args) {
@@ -87,13 +102,13 @@ function findTaskByIndex(taskIndex, tasks) {
     if (task) {
         return task
     } else {
-        console.log('No task found for index {0}'.format(taskIndex))
+        log(warningStyle('No task found for index {0}'.format(taskIndex)))
     }
 }
 
 function setTaskTime() {
-    readInterface.question('Give the index number of the task to set time for: ', taskIndex => {
-        readInterface.question('Give time for task in seconds: ', time => {
+    readInterface.question(questionStyle('Give the index number of the task to set time for: '), taskIndex => {
+        readInterface.question(questionStyle('Give time for task in seconds: '), time => {
             applyToTaskByIndex(tasks, taskIndex, setTimeFor, parseInt(time))
         })
     })
@@ -105,7 +120,7 @@ function setTimeFor(task, time) {
 }
 
 function resumeTask() {
-    readInterface.question('Give the index number of the task to resume timing: ', taskIndex => {
+    readInterface.question(questionStyle('Give the index number of the task to resume timing: '), taskIndex => {
         let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const running = task.timerRunning
@@ -114,24 +129,24 @@ function resumeTask() {
                 task.timerRunning = !running
                 task.timer = setInterval(intervalFunc, 1000, taskIndex)
                 clearAndDisplayHelpAndTasks(tasks)
-                console.log('Resumed task {0}'.format(taskName))
+                log(successStyle('Resumed task {0}'.format(taskName)))
             } else {
-                console.log('Timer already running for {0}'.format(taskName))
+                log(warningStyle('Timer already running for {0}'.format(taskName)))
             }
         }
     })
 }
 
 function addNote() {
-    readInterface.question('Give the index number of the task to add a note to: ', taskIndex => {
+    readInterface.question(questionStyle('Give the index number of the task to add a note to: '), taskIndex => {
         let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const taskName = task.name
-            readInterface.question('Write the note to add to the task {0}: '.format(taskName), note => {
+            readInterface.question(questionStyle('Write the note to add to the task {0}: ').format(taskName), note => {
                 task.notes.push(note)
                 clearAndDisplayHelpAndTasks(tasks)
-                console.log('Task {0} now has notes:'.format(taskName))
-                task.notes.map(taskNote => console.log(taskNote))
+                log(successStyle('Task {0} now has notes:'.format(taskName)))
+                task.notes.map(taskNote => log(noteStyle(taskNote)))
             })
         }
     })
@@ -141,32 +156,39 @@ function secondsToHours(seconds) {
     return Math.round((seconds / 3600) * 100) / 100
 }
 
+const taskNameStyle = chalk.green
+const timeStyle = chalk.cyan.bgBlack
+const noteStyle = chalk.magenta
+const rowHeaderStyle = chalk.red
+
 function displayReport(tasks) {
     clearAndDisplayHelpAndTasks(tasks)
     tasks.map(task => {
-        console.log('Task: {0}'.format(task.name))
-        console.log('Time taken {0}'.format(secondsToHours(task.time)))
-        console.log('Notes:')
+        log(header('Task:'))
+        log(taskNameStyle(task.name))
+        log(rowHeaderStyle('Time taken: {0}').format(timeStyle(secondsToHours(task.time))))
+        log(rowHeaderStyle('Notes:'))
         task.notes.map(note => {
-            console.log(note)
+            log(noteStyle(note))
         })
+        drawTerminalHorizontalLine(thickHorizontalLine)
     })
 }
 
 function deleteTask(){
-    readInterface.question('Give the index number of the task to delete: ', taskIndex => {
+    readInterface.question(questionStyle('Give the index number of the task to delete: '), taskIndex => {
         let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const taskName = task.name
-            console.log('Deleting task {0}'.format(taskName))
-            readInterface.question('Are you sure? y/n: ', response => {
+            log(warningStyle('Deleting task {0}'.format(taskName)))
+            readInterface.question(chalk.bgRed.black('Are you sure? y/n: '), response => {
                 if (response === 'y'){
                     clearInterval(task.timer)
                     delete tasks[taskIndex]
                     clearAndDisplayHelpAndTasks(tasks)
-                    console.log('Task {0} deleted!'.format(taskName))
+                    log(successStyle('Task {0} deleted!'.format(taskName)))
                 } else {
-                    console.log('Task delete aborted.')
+                    log(warningStyle('Task delete aborted.'))
                 }
             })
         }
@@ -184,7 +206,7 @@ function saveTasksToFile(filename) {
             return console.log(error)
         }
         clearAndDisplayHelpAndTasks(tasks)
-        console.log('Currents tasks saved as a file: {0}'.format(filename))
+        log(successStyle('Currents tasks saved as a file: {0}'.format(filename)))
     })
 }
 
@@ -202,7 +224,7 @@ function autosave() {
 function switchAutosave() {
     autosaver.status = !autosaver.status
     if (autosaver.status) {
-        readInterface.question('What is the autosave interval in milliseconds (30000ms = 30s)? ', interval => {
+        readInterface.question(questionStyle('What is the autosave interval in milliseconds (30000ms = 30s)? '), interval => {
             autosaver.timer = setInterval(autosave, interval)
         })
     } else {
@@ -225,10 +247,13 @@ const userInputs = {
     'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
 
 function listAvailableCommands(commands) {
-    console.log('Available commands')
+    log(header('Available commands'))
+    drawTerminalHorizontalLine(thickHorizontalLine)
     for (var commandKey in commands) {
         if (userInputs.hasOwnProperty(commandKey)) {
-            console.log('Shortcut: {0} Description: {1}'.format(commandKey, commands[commandKey].description))
+            const shortcut = shortcutStyle('{0}'.format(commandKey))
+            const description = descriptionStyle(commands[commandKey].description)
+            log(shortcut + ' ' + description)
         }
     }
 }
@@ -238,13 +263,15 @@ function clearScreen() {
 }
 
 function displayAutosaveStatus() {
-    const status = autosaver.status ? 'on' : 'off'
-    console.log('Autosave status: {0}'.format(status))
+    const status = autosaver.status ? chalk.green.bgBlack(' on') : chalk.red.bgBlack(' off')
+    log(infoStyle('Autosave status:{0}'.format(status)))
+    drawTerminalHorizontalLine(thickHorizontalLine)
 }
 
 function clearAndDisplayHelpAndTasks(tasks) {
     clearScreen()
     listAvailableCommands(userInputs)
+    drawTerminalHorizontalLine(thickHorizontalLine)
     displayAutosaveStatus()
     displayTasks(tasks)
 }
@@ -254,26 +281,24 @@ function drawTerminalHorizontalLine(marker) {
     for (let i = 0; i < process.stdout.columns; i++){
         horizontalLine += marker
     }
-    console.log(horizontalLine)
+    log(horizontalLine)
 }
 
 function liveFeed(tasks) {
     clearScreen()
-    console.log('!Livefeed! Press l and enter to return to normal mode.')
+    log(header('!Livefeed! Press l and enter to return to normal mode.'))
     tasks.map(task => {
-        drawTerminalHorizontalLine('━')
-        console.log('Task name: {0}'.format(task.name))
-        console.log('Time taken: {0}'.format(secondsToHours(task.time)))
+        drawTerminalHorizontalLine(thickHorizontalLine)
+        log(rowHeaderStyle('Task name: {0}'.format(taskNameStyle(task.name))))
+        log(rowHeaderStyle('Time taken: {0}'.format(timeStyle(secondsToHours(task.time)))))
         const notes = task.notes
         if (notes.length > 0) {
-            console.log('Notes: ')
-            drawTerminalHorizontalLine('─')
+            log(rowHeaderStyle('Notes: '))
             notes.map(note => {
-                console.log('* {0}'.format(note))
+                log(noteStyle('* {0}'.format(note)))
             })
-            drawTerminalHorizontalLine('─')
         }
-        drawTerminalHorizontalLine('━')
+        drawTerminalHorizontalLine(thickHorizontalLine)
     })
 }
 
@@ -287,17 +312,17 @@ function switchLiveFeed(tasks){
             clearAndDisplayHelpAndTasks(tasks)
         }
     } else {
-        console.log('No tasks found! Please add some by typing a and hitting enter!')
+        log(warningStyle('No tasks found! Please add some by typing a and hitting enter!'))
     }
 }
 
 function handleInput(str) {
     if (userInputs[str]) {
         const command = userInputs[str]
-        console.log(`Running command "${command.description}"`)
+        log(successStyle(`Running command "${command.description}"`))
         command.command(tasks)
     } else {
-        console.log(`No command found for "${str}"`)
+        log(warningStyle(`No command found for "${str}"`))
     }
 }
 
