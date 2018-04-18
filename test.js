@@ -24,3 +24,23 @@ describe('Test setTimeFor', () => {
         app.setTimeFor(task, 12).time.should.equal(12)
     })
 })
+
+describe('Test applyToTaskByIndex', () => {
+    it('applyToTaskByIndex applies given function to found task by given index number', () => {
+        let tasks = [{time: 0}, {time: 5}, {time: 10}]
+        JSON.stringify(app.applyToTaskByIndex(tasks, 1, app.setTimeFor, 20))
+            .should.equal(JSON.stringify([{time: 0}, {time: 20}, {time: 10}]))
+        JSON.stringify(app.applyToTaskByIndex(tasks, 2, app.setTimeFor, 30))
+            .should.equal(JSON.stringify([{time: 0}, {time: 20}, {time: 30}]))
+    })
+})
+
+describe('Test findTaskByIndex', () => {
+    let tasks = [{time: 0},  {time: 5}]
+    it('findTaskByIndex returns the correct task', () => {
+        app.findTaskByIndex(1, tasks).time.should.equal(5)
+    })
+    it('findTaskByIndex returns undefined when task not found', () => {
+        should.equal(undefined, app.findTaskByIndex(2, tasks))
+    })
+})

@@ -68,7 +68,13 @@ function stopAllTasks(tasks) {
     console.log("Finished stopping timers.")
 }
 
-function findTaskByIndex(taskIndex) {
+function applyToTaskByIndex(tasks, index, method, ...args) {
+    let task = findTaskByIndex(index, tasks)
+    task = method(task, args[0])
+    return tasks
+}
+
+function findTaskByIndex(taskIndex, tasks) {
     let task = tasks[taskIndex]
     if (task) {
         return task
@@ -84,7 +90,7 @@ function setTimeFor(task, time) {
 
 function resumeTask() {
     readInterface.question('Give the index number of the task to resume timing: ', taskIndex => {
-        let task = findTaskByIndex(taskIndex)
+        let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const running = task.timerRunning
             const taskName = task.name
@@ -102,7 +108,7 @@ function resumeTask() {
 
 function addNote() {
     readInterface.question('Give the index number of the task to add a note to: ', taskIndex => {
-        let task = findTaskByIndex(taskIndex)
+        let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const taskName = task.name
             readInterface.question('Write the note to add to the task {0}: '.format(taskName), note => {
@@ -133,7 +139,7 @@ function displayReport(tasks) {
 
 function deleteTask(){
     readInterface.question('Give the index number of the task to delete: ', taskIndex => {
-        let task = findTaskByIndex(taskIndex)
+        let task = findTaskByIndex(taskIndex, tasks)
         if (task) {
             const taskName = task.name
             console.log('Deleting task {0}'.format(taskName))
@@ -244,4 +250,6 @@ function runManager() {
 module.exports = {runManager: () => runManager(),
                   stopRunningTaskTimers: tasks => stopRunningTaskTimers(tasks),
                   secondsToHours: () => secondsToHours(),
-                  setTimeFor: (task, time) => setTimeFor(task, time)}
+                  setTimeFor: (task, time) => setTimeFor(task, time),
+                  applyToTaskByIndex: (tasks, index, method, args) => applyToTaskByIndex(tasks, index, method, args),
+                  findTaskByIndex: (index, tasks) => findTaskByIndex(index, tasks)}
