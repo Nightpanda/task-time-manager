@@ -23,8 +23,12 @@ let readInterface = readline.createInterface({
 });
 
 readInterface.on('line', (str) => {
-    clearAndDisplayHelpAndTasks(tasks)
-    handleInput(str)
+    if (str != 'l' && liveMode.status == true) {
+        console.log('Livefeed is on, commands are disabled. Disable with l and enter')
+    } else {
+        clearAndDisplayHelpAndTasks(tasks)
+        handleInput(str)
+    }
     readInterface.prompt()
 }).on('close', () => {
     console.log('Goodbye')
