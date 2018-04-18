@@ -15,6 +15,7 @@ if (!String.prototype.format) {
 }
 
 let autosaver = {status: false}
+let liveMode = {status: false}
 let tasks = []
 let readInterface = readline.createInterface({
     input: process.stdin,
@@ -133,7 +134,7 @@ function addNote() {
 }
 
 function secondsToHours(seconds) {
-    return seconds / 3600
+    return Math.round((seconds / 3600) * 100) / 100
 }
 
 function displayReport(tasks) {
@@ -216,6 +217,7 @@ const userInputs = {
     'd': {description: 'Deletes a task.', command: () => deleteTask()},
     'w': {description: 'Save tasks to a file.', command: () => writeTasks()},
     't': {description: 'Set time for task.', command: () =>  setTaskTime()},
+    'l': {description: 'Shows live feed of tasks.', command: tasks => switchLiveFeed(tasks)},
     'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
 
 function listAvailableCommands(commands) {
@@ -231,16 +233,58 @@ function clearScreen() {
     console.log('\u001B[2J\u001B[0;0f')
 }
 
-function displayAutosaveStatus(){
+function displayAutosaveStatus() {
     const status = autosaver.status ? 'on' : 'off'
     console.log('Autosave status: {0}'.format(status))
 }
 
-function clearAndDisplayHelpAndTasks(tasks){
+function clearAndDisplayHelpAndTasks(tasks) {
     clearScreen()
     listAvailableCommands(userInputs)
     displayAutosaveStatus()
     displayTasks(tasks)
+}
+
+function drawTerminalHorizontalLine(marker) {
+    let horizontalLine = ''
+    for (let i = 0; i < process.stdout.columns; i++){
+        horizontalLine += marker
+    }
+    console.log(horizontalLine)
+}
+
+function liveFeed(tasks) {
+    clearScreen()
+    console.log('!Livefeed! Press l and enter to return to normal mode.')
+    tasks.map(task => {
+        drawTerminalHorizontalLine('━')
+        console.log('Task name: {0}'.format(task.name))
+        console.log('Time taken: {0}'.format(secondsToHours(task.time)))
+        const notes = task.notes
+        if (notes.length > 0) {
+            console.log('Notes: ')
+            drawTerminalHorizontalLine('─')
+            notes.map(note => {
+                console.log('* {0}'.format(note))
+            })
+            drawTerminalHorizontalLine('─')
+        }
+        drawTerminalHorizontalLine('━')
+    })
+}
+
+function switchLiveFeed(tasks){
+    if (tasks.length > 0) {
+        liveMode.status = !liveMode.status
+        if (liveMode.status) {
+            liveMode.timer = setInterval(liveFeed, 1000, tasks)
+        }  else {
+            clearInterval(liveMode.timer)
+            clearAndDisplayHelpAndTasks(tasks)
+        }
+    } else {
+        console.log('No tasks found! Please add some by typing a and hitting enter!')
+    }
 }
 
 function handleInput(str) {
