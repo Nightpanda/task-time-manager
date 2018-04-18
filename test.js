@@ -23,6 +23,11 @@ describe('Test setTimeFor', () => {
         app.setTimeFor(task, 5).time.should.equal(5)
         app.setTimeFor(task, 12).time.should.equal(12)
     })
+    it('setTimeFor(task) sets a number as the time', () => {
+        let task = {time: 10}
+        app.setTimeFor(task, 12).time.should.be.a('number')
+    })
+
 })
 
 describe('Test applyToTaskByIndex', () => {

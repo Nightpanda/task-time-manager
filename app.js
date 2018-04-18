@@ -70,7 +70,10 @@ function stopAllTasks(tasks) {
 
 function applyToTaskByIndex(tasks, index, method, ...args) {
     let task = findTaskByIndex(index, tasks)
-    task = method(task, args[0])
+    if (task) {
+        task = method(task, ...args)
+        clearAndDisplayHelpAndTasks(tasks)
+    }
     return tasks
 }
 
@@ -81,6 +84,14 @@ function findTaskByIndex(taskIndex, tasks) {
     } else {
         console.log('No task found for index {0}'.format(taskIndex))
     }
+}
+
+function setTaskTime() {
+    readInterface.question('Give the index number of the task to set time for: ', taskIndex => {
+        readInterface.question('Give time for task in seconds: ', time => {
+            applyToTaskByIndex(tasks, taskIndex, setTimeFor, parseInt(time))
+        })
+    })
 }
 
 function setTimeFor(task, time) {
@@ -204,6 +215,7 @@ const userInputs = {
     'p': {description: 'Prints a task report of time taken with notes.', command: tasks => displayReport(tasks)},
     'd': {description: 'Deletes a task.', command: () => deleteTask()},
     'w': {description: 'Save tasks to a file.', command: () => writeTasks()},
+    't': {description: 'Set time for task.', command: () =>  setTaskTime()},
     'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
 
 function listAvailableCommands(commands) {
