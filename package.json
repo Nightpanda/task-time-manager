@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Helper for tracking time between differents tasks.",
   "main": "app.js",
-    "scripts": {
-        "start": "node -e 'require(\"./app.js\").runManager()'",
-        "test": "nyc mocha"
+  "scripts": {
+    "start": "node -e 'require(\"./app.js\").runManager()'",
+    "test": "nyc mocha"
   },
   "repository": {
     "type": "git",

@@ -77,6 +77,11 @@ function findTaskByIndex(taskIndex) {
     }
 }
 
+function setTimeFor(task, time) {
+    task.time = time
+    return task
+}
+
 function resumeTask() {
     readInterface.question('Give the index number of the task to resume timing: ', taskIndex => {
         let task = findTaskByIndex(taskIndex)
@@ -238,4 +243,5 @@ function runManager() {
 
 module.exports = {runManager: () => runManager(),
                   stopRunningTaskTimers: tasks => stopRunningTaskTimers(tasks),
-                  secondsToHours: () => secondsToHours()}
+                  secondsToHours: () => secondsToHours(),
+                  setTimeFor: (task, time) => setTimeFor(task, time)}

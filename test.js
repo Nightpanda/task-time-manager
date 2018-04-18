@@ -16,3 +16,11 @@ describe('Test stopRunningTaskTimers', () => {
         })
     })
 })
+
+describe('Test setTimeFor', () => {
+    it('setTimeFor(task) results in task having given time', () => {
+        let task = {time: 10}
+        app.setTimeFor(task, 5).time.should.equal(5)
+        app.setTimeFor(task, 12).time.should.equal(12)
+    })
+})
