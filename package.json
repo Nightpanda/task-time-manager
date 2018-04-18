@@ -1,6 +1,6 @@
 {
   "name": "task-time-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Helper for tracking time between differents tasks.",
   "main": "app.js",
   "scripts": {
