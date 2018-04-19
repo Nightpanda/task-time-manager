@@ -62,12 +62,21 @@ function intervalFunc(index) {
     tasks[index].time += 1
 }
 
+function stopRunningTimerInTask(task) {
+    clearInterval(task.timer)
+    if (!task.timer._onTimeout) {
+        task.timerRunning = !task.timerRunning
+        log(successStyle('Stopped timer for task {0}'.format(task.name)))
+    } else {
+        log(warningStyle('Problem stopping timer for task {0}'.format(task.name)))
+    }
+    return task
+}
+
 function stopRunningTaskTimers(tasks) {
     return tasks.map(task => {
         if(task.timerRunning) {
-            clearInterval(task.timer)
-            task.timerRunning = !task.timerRunning
-            log(successStyle('Stopped timer for task {0}'.format(task.name)))
+            task = stopRunningTimerInTask(task)
         }
         return task
     })
@@ -334,6 +343,7 @@ function runManager() {
 
 module.exports = {runManager: () => runManager(),
                   stopRunningTaskTimers: tasks => stopRunningTaskTimers(tasks),
+                  stopRunningTimerInTask: task => stopRunningTimerInTask(task),
                   secondsToHours: () => secondsToHours(),
                   setTimeFor: (task, time) => setTimeFor(task, time),
                   applyToTaskByIndex: (tasks, index, method, args) => applyToTaskByIndex(tasks, index, method, args),

@@ -5,15 +5,26 @@ let app = require('./app.js')
 
 describe('Test stopRunningTaskTimers', () => {
     it('stopping timers should reverse timerRunning', () => {
-        let tasks = [{timerRunning: true}]
-        JSON.stringify(app.stopRunningTaskTimers(tasks))
-            .should.equal(JSON.stringify([{timerRunning: false}]))
+        const tasks = [{timer: setInterval(() => {}), timerRunning: true}]
+        const stoppedTasks = app.stopRunningTaskTimers(tasks)
+        stoppedTasks[0].timerRunning.should.equal(false)
     })
     it('stopping timers should clear task timer when timerRunning is true', () => {
         let tasks = [{timer: setInterval(() => {}), timerRunning: true}]
         app.stopRunningTaskTimers(tasks).map(task => {
             should.equal(task.timer._onTimeout, null)
         })
+    })
+})
+
+describe('Test stopRunningTimerInTask', () => {
+    it('reverses timerRunning in task', () => {
+        const task = {timer: setInterval(() => {}), timerRunning: true}
+        app.stopRunningTimerInTask(task).timerRunning.should.equal(false)
+    })
+    it('clears timer in task', () => {
+        const task = {timer: setInterval(() => {}), timerRunning: true}
+        should.equal(app.stopRunningTimerInTask(task).timer._onTimeout, null)
     })
 })
 
