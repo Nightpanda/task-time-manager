@@ -31,8 +31,7 @@ readInterface.on('line', (str) => {
   }
   readInterface.prompt()
 }).on('close', () => {
-  log(chalk.inverse('Goodbye'))
-  process.exit(0)
+  quit()
 })
 readInterface.pause()
 process.stdin.setRawMode(true)
@@ -52,7 +51,7 @@ function intervalFunc (index) {
 
 function stopRunningTimerInTask (task) {
   clearInterval(task.timer)
-  if (!task.timer._onTimeout) {
+  if (!isTaskTimerRunning(task)) {
     task.timerRunning = !task.timerRunning
     log(successStyle(`Stopped timer for task ${task.name}`))
   } else {
@@ -116,6 +115,14 @@ function setTimeFor (task, time) {
   return task
 }
 
+function isTaskTimerRunning (task) {
+  if (task.timer._onTimeout) {
+    return true
+  } else {
+    return false
+  }
+}
+
 function resumeTask () {
   readInterface.question(questionStyle('Give the index number of the task to resume timing: '), taskIndex => {
     let task = findTaskByIndex(taskIndex, tasks)
@@ -139,7 +146,7 @@ function addNote () {
     let task = findTaskByIndex(taskIndex, tasks)
     if (task) {
       const taskName = task.name
-      readInterface.question(questionStyle('Write the note to add to the task {0}: ').format(taskName), note => {
+      readInterface.question(questionStyle(`Write the note to add to the task ${taskName}: `), note => {
         task.notes.push(note)
         clearAndDisplayHelpAndTasks(tasks)
         log(successStyle(`Task ${taskName} now has notes:`))
@@ -163,7 +170,7 @@ function displayReport (tasks) {
   tasks.map(task => {
     log(header('Task:'))
     log(taskNameStyle(task.name))
-    log(rowHeaderStyle(`Time taken: ${timeStyle(secondsToHours(task.time))}`))
+    log(rowHeaderStyle(`Time taken: ${timeStyle(secondsToHours(task.time))} h`))
     log(rowHeaderStyle('Notes:'))
     task.notes.map(note => {
       log(noteStyle(note))
@@ -180,10 +187,15 @@ function deleteTask () {
       log(warningStyle(`Deleting task ${taskName}`))
       readInterface.question(chalk.bgRed.black('Are you sure? y/n: '), response => {
         if (response === 'y') {
-          clearInterval(task.timer)
-          delete tasks[taskIndex]
           clearAndDisplayHelpAndTasks(tasks)
-          log(successStyle(`Task ${taskName} deleted!`))
+          let stoppedTask = stopRunningTimerInTask(task)
+          if (isTaskTimerRunning(stoppedTask)) {
+            log(warningStyle(`Couldn't stop ${taskName}. Try again.`))
+          } else {
+            delete tasks[taskIndex]
+            clearAndDisplayHelpAndTasks(tasks)
+            log(successStyle(`Task ${taskName} deleted!`))
+          }
         } else {
           log(warningStyle('Task delete aborted.'))
         }
@@ -231,6 +243,26 @@ function switchAutosave () {
   clearAndDisplayHelpAndTasks(tasks)
 }
 
+function quit () {
+  log(chalk.inverse('Goodbye'))
+  process.exit(0)
+}
+
+function confirmQuit (tasks) {
+  if (taskTimersActive(tasks)) {
+    log(warningStyle('There are still running timers on tasks!'))
+    readInterface.question(questionStyle('Are you sure you want to quit? y/n: '), answer => {
+      if (answer === 'y') {
+        quit()
+      } else {
+        readInterface.prompt()
+      }
+    })
+  } else {
+    quit()
+  }
+}
+
 const userInputs = {
   'a': {description: 'Start tracking a new task.', command: () => addTask()},
   'r': {description: 'Resumes a timer on a task.', command: () => resumeTask()},
@@ -241,7 +273,8 @@ const userInputs = {
   'w': {description: 'Save tasks to a file.', command: () => writeTasks()},
   't': {description: 'Set time for task.', command: () => setTaskTime()},
   'l': {description: 'Shows live feed of tasks.', command: tasks => switchLiveFeed(tasks)},
-  'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()}}
+  'as': {description: 'Starts autosaving at given interval.', command: () => switchAutosave()},
+  'q': {description: 'Quit and confirm if tasks are running.', command: tasks => confirmQuit(tasks)}}
 
 function listAvailableCommands (commands) {
   log(header('Available commands'))
@@ -287,7 +320,7 @@ function liveFeed (tasks) {
   tasks.map(task => {
     drawTerminalHorizontalLine(thickHorizontalLine)
     log(rowHeaderStyle(`Task name: ${taskNameStyle(task.name)}`))
-    log(rowHeaderStyle(`Time taken: ${timeStyle(secondsToHours(task.time))}`))
+    log(rowHeaderStyle(`Time taken: ${timeStyle(secondsToHours(task.time))} h`))
     const notes = task.notes
     if (notes.length > 0) {
       log(rowHeaderStyle('Notes: '))
@@ -313,6 +346,20 @@ function switchLiveFeed (tasks) {
   }
 }
 
+function tasksExist (tasks) {
+  if (!tasks) return false
+  return tasks.length > 0
+}
+
+function taskTimersActive (tasks) {
+  if (tasksExist(tasks)) {
+    return tasks.map(task => {
+      return isTaskTimerRunning(task)
+    }).some(status => status)
+  }
+  return false
+}
+
 function handleInput (str) {
   if (userInputs[str]) {
     const command = userInputs[str]
@@ -329,10 +376,15 @@ function runManager () {
   readInterface.prompt()
 }
 
-module.exports = {runManager: () => runManager(),
+module.exports = {
+  runManager: () => runManager(),
   stopRunningTaskTimers: tasks => stopRunningTaskTimers(tasks),
   stopRunningTimerInTask: task => stopRunningTimerInTask(task),
   secondsToHours: () => secondsToHours(),
   setTimeFor: (task, time) => setTimeFor(task, time),
   applyToTaskByIndex: (tasks, index, method, args) => applyToTaskByIndex(tasks, index, method, args),
-  findTaskByIndex: (index, tasks) => findTaskByIndex(index, tasks)}
+  findTaskByIndex: (index, tasks) => findTaskByIndex(index, tasks),
+  tasksExist: tasks => tasksExist(tasks),
+  taskTimersActive: tasks => taskTimersActive(tasks),
+  isTaskTimerRunning: task => isTaskTimerRunning(task)
+}
