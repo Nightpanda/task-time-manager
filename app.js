@@ -23,7 +23,7 @@ readInterface.on('line', (str) => {
   }
   readInterface.prompt()
 }).on('close', () => {
-  quit()
+  quit(taskList)
 })
 readInterface.pause()
 process.stdin.setRawMode(true)
@@ -81,7 +81,7 @@ exports.saveTasksToFile = (taskList, filename) => {
     delete timerlessTask.timer
     return JSON.stringify(timerlessTask)
   })
-  fs.writeFile(`./${filename}`, stringTasks, (error) => {
+  fs.writeFileSync(`./${filename}`, stringTasks, {encoding: 'utf-8', flag: 'w'}, (error) => {
     if (error) {
       return console.log(error)
     }
@@ -114,8 +114,9 @@ exports.switchAutosave = (taskList, readInterface) => {
   this.clearAndDisplayHelpAndTasks(taskList)
 }
 
-function quit () {
+function quit (taskList) {
   log(chalk.inverse('Goodbye'))
+  exports.saveTasksToFile(taskList, 'backup_tasklist')
   process.exit(0)
 }
 
@@ -124,13 +125,13 @@ function confirmQuit (taskList, readInterface) {
     log(styles.warningStyle('There are still running timers on tasks!'))
     readInterface.question(styles.questionStyle('Are you sure you want to quit? y/n: '), answer => {
       if (answer === 'y') {
-        quit()
+        quit(taskList)
       } else {
         readInterface.prompt()
       }
     })
   } else {
-    quit()
+    quit(taskList)
   }
 }
 
