@@ -55,9 +55,13 @@ exports.stopAllTasks = (tasks) => {
 }
 
 exports.applyToTaskByIndex = (taskList, index, method, ...args) => {
-  let task = this.findTaskByIndex(index, taskList)
+  let task = taskList[index]
+  const display = app.clearAndDisplayHelpAndTasks
   if (task) {
     task = method(task, ...args)
+    display(taskList)
+  } else {
+    log(styles.warningStyle(`No task found for index ${index}`))
   }
   return taskList
 }
@@ -75,7 +79,6 @@ exports.setTaskTime = (taskList, readInterface) => {
   readInterface.question(styles.questionStyle('Give the index number of the task to set time for: '), taskIndex => {
     readInterface.question(styles.questionStyle('Give time for task in seconds: '), time => {
       this.applyToTaskByIndex(taskList, taskIndex, this.setTimeFor, parseInt(time))
-      app.clearAndDisplayHelpAndTasks(taskList)
     })
   })
 }
