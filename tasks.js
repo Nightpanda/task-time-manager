@@ -43,9 +43,10 @@ exports.addTask = (taskList, readInterface) => {
   taskList = this.stopRunningTaskTimers(taskList)
   interfaces.askQuestion(readInterface, 'Enter task name: ', (name) => {
     taskList = this.addTaskToList(taskList, name)
-    app.setTaskList(taskList)
+    taskList = app.setTaskList(taskList)
     app.clearAndDisplayHelpAndTasks(taskList)
   })
+  return taskList
 }
 
 exports.stopAllTasks = (tasks) => {
@@ -56,8 +57,8 @@ exports.stopAllTasks = (tasks) => {
 
 exports.applyToTaskByIndex = (taskList, index, method, ...args) => {
   let task = taskList[index]
-  const display = app.clearAndDisplayHelpAndTasks
   if (task) {
+    const display = app.clearAndDisplayHelpAndTasks
     task = method(task, ...args)
     display(taskList)
   } else {
@@ -72,6 +73,7 @@ exports.findTaskByIndex = (taskIndex, tasks) => {
     return task
   } else {
     log(styles.warningStyle(`No task found for index ${taskIndex}`))
+    return undefined
   }
 }
 

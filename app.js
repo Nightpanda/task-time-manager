@@ -220,6 +220,7 @@ exports.switchLiveFeed = (taskList) => {
 
 exports.setTaskList = (newTaskList) => {
   taskList = newTaskList
+  return taskList
 }
 
 function handleInput (str) {
