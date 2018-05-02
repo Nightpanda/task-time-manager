@@ -9,3 +9,4 @@ exports.warningStyle = chalk.yellow
 exports.successStyle = chalk.bgGreen.white
 exports.questionStyle = chalk.gray
 exports.confirmationStyle = chalk.bgRed.black
+exports.highlightStyle = chalk.bgBlack.yellow
