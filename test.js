@@ -1,9 +1,15 @@
-/* global describe it */
+/* global describe it beforeEach afterEach */
 'use strict'
 
-const should = require('chai').should()
+const dirtyChai = require('dirty-chai')
+const chai = require('chai')
+const should = chai.should()
+chai.use(dirtyChai)
+
 const tasks = require('./tasks.js')
 const readInterface = require('./interface.js')
+const sinon = require('sinon')
+const styles = require('./styles.js')
 
 /*
 describe('Test stopRunningTaskTimers', () => {
@@ -20,6 +26,17 @@ describe('Test stopRunningTaskTimers', () => {
   })
 })
 */
+
+function timerTask () {
+  return {timer: {_onTimeout: () => {}}, timerRunning: true}
+}
+
+function stoppedTask () {
+  let task = {timer: setInterval(task => { clearInterval(task.timer) }), timerRunning: true, name: 'Halted One'}
+  clearInterval(task.timer)
+  return task
+}
+
 describe('Test stopRunningTimerInTask', () => {
   it('reverses timerRunning in task', () => {
     let task = {timer: setInterval(task => { clearInterval(task.timer) }), timerRunning: true}
@@ -104,15 +121,39 @@ describe('Test isTaskTimerRunning', () => {
   })
 })
 
-function timerTask () {
-  return {timer: {_onTimeout: () => {}}, timerRunning: true}
-}
-
-function stoppedTask () {
-  let task = {timer: setInterval(task => { clearInterval(task.timer) }), timerRunning: true}
-  clearInterval(task.timer)
-  return task
-}
+describe('Test resumeTaskFor', () => {
+  let sandbox
+  beforeEach(() => {
+    sandbox = sinon.createSandbox()
+    sandbox.stub(console, 'log')
+    sandbox.stub(console, 'error')
+  })
+  afterEach(() => {
+    sandbox.restore()
+  })
+  const taskName = 'TestonosTaskonos'
+  const timerTask = {timer: {_onTimeout: () => {}}, timerRunning: true, name: taskName}
+  it('should be a function', () => {
+    tasks.resumeTaskFor.should.be.a('function')
+  })
+  it('should log error when timer already running', () => {
+    tasks.resumeTaskFor(timerTask)
+    sinon.assert.calledOnce(console.log)
+    sinon.assert.calledWithExactly(console.log, styles.warningStyle(`Timer already running for ${taskName}`))
+  })
+  it('should log success, change timerRunning true and start a timer, when timer succesfully started', () => {
+    const stoppedTimer = {timer: setInterval(() => {}), timerRunning: true, name: 'Halted One'}
+    let taskList = []
+    clearInterval(stoppedTimer.timer)
+    stoppedTimer.timerRunning = false
+    tasks.isTaskTimerRunning(stoppedTimer).should.be.false()
+    const resumedTask = tasks.resumeTaskFor(stoppedTimer, 0, taskList)
+    tasks.isTaskTimerRunning(stoppedTimer).should.be.true()
+    resumedTask.timerRunning.should.be.true()
+    sinon.assert.calledOnce(console.log)
+    sinon.assert.calledWithExactly(console.log, styles.successStyle(`Resumed task ${stoppedTimer.name}`))
+  })
+})
 
 describe('Test interface.js', () => {
   let newReadInterface = readInterface.createReadInterface()

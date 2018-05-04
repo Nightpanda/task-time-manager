@@ -58,9 +58,8 @@ exports.stopAllTasks = (tasks) => {
 exports.applyToTaskByIndex = (taskList, index, method, ...args) => {
   let task = taskList[index]
   if (task) {
-    const display = app.clearAndDisplayHelpAndTasks
     task = method(task, ...args)
-    display(taskList)
+    taskList[index] = task
   } else {
     log(styles.warningStyle(`No task found for index ${index}`))
   }
@@ -81,6 +80,7 @@ exports.setTaskTime = (taskList, readInterface) => {
   readInterface.question(styles.questionStyle('Give the index number of the task to set time for: '), taskIndex => {
     readInterface.question(styles.questionStyle('Give time for task in seconds: '), time => {
       this.applyToTaskByIndex(taskList, taskIndex, this.setTimeFor, parseInt(time))
+      app.clearAndDisplayHelpAndTasks(taskList)
     })
   })
 }
@@ -117,21 +117,24 @@ exports.taskTimersActive = (taskList) => {
   }
 }
 
+exports.resumeTaskFor = (task, taskIndex, taskList) => {
+  const running = task.timerRunning
+  const taskName = task.name
+  if (!running) {
+    task.timerRunning = !running
+    task.timer = setInterval(intervalFunc, 1000, taskIndex, taskList)
+    console.log(styles.successStyle(`Resumed task ${task.name}`))
+  } else {
+    console.log(styles.warningStyle(`Timer already running for ${taskName}`))
+  }
+  return task
+}
+
 exports.resumeTask = (taskList, readInterface) => {
   readInterface.question(styles.questionStyle('Give the index number of the task to resume timing: '), taskIndex => {
-    let task = this.findTaskByIndex(taskIndex, taskList)
-    if (task) {
-      const running = task.timerRunning
-      const taskName = task.name
-      if (!running) {
-        task.timerRunning = !running
-        task.timer = setInterval(intervalFunc, 1000, taskIndex, taskList)
-        app.clearAndDisplayHelpAndTasks(taskList)
-        log(styles.successStyle(`Resumed task ${taskName}`))
-      } else {
-        log(styles.warningStyle(`Timer already running for ${taskName}`))
-      }
-    }
+    this.applyToTaskByIndex(taskList, taskIndex, (task) => {
+      return this.resumeTaskFor(task, taskIndex, taskList)
+    })
   })
 }
 

@@ -110,7 +110,6 @@ exports.switchAutosave = (taskList, readInterface) => {
   } else {
     clearInterval(autosaver.timer)
   }
-
   this.clearAndDisplayHelpAndTasks(taskList)
 }
 
