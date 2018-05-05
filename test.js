@@ -189,3 +189,16 @@ describe('Test addTaskToList', () => {
     clearInterval(newList[0].timer)
   })
 })
+
+describe('Test deleteTaskFromList', () => {
+  const newList = [{timer: setInterval(() => {}), timerRunning: true, name: 'Taskonos'}]
+  const deletedList = tasks.deleteTaskFromList(newList[0], newList, 0)
+  it('list length does not change since delete is used', () => {
+    deletedList.length.should.be.equal(newList.length)
+  })
+  it('deleted task appears deleted in the taskList', () => {
+    should.equal(undefined, deletedList[0])
+  })
+  it('does not delete task and logs a warning if task timer can´t be stopped')
+  it('deletes only the indexed task, not others')
+})

@@ -138,6 +138,17 @@ exports.resumeTask = (taskList, readInterface) => {
   })
 }
 
+exports.deleteTaskFromList = (task, taskList, taskIndex) => {
+  let taskName = task.name
+  let stoppedTask = this.stopRunningTimerInTask(task)
+  if (this.isTaskTimerRunning(stoppedTask)) {
+    log(styles.warningStyle(`Couldn't stop ${taskName}. Try again.`))
+  } else {
+    delete taskList[taskIndex]
+  }
+  return taskList
+}
+
 exports.deleteTask = (taskList, readInterface) => {
   readInterface.question(styles.questionStyle('Give the index number of the task to delete: '), taskIndex => {
     let task = this.findTaskByIndex(taskIndex, taskList)
@@ -146,15 +157,10 @@ exports.deleteTask = (taskList, readInterface) => {
       log(styles.warningStyle(`Deleting task ${taskName}`))
       readInterface.question(styles.confirmationStyle('Are you sure? y/n: '), response => {
         if (response === 'y') {
-          let stoppedTask = this.stopRunningTimerInTask(task)
-          if (this.isTaskTimerRunning(stoppedTask)) {
-            log(styles.warningStyle(`Couldn't stop ${taskName}. Try again.`))
-          } else {
-            delete taskList[taskIndex]
-            app.clearAndDisplayHelpAndTasks(taskList)
-            app.setTaskList(taskList)
-            log(styles.successStyle(`Task ${taskName} deleted!`))
-          }
+          taskList = this.deleteTaskFromList(task, taskList, taskIndex)
+          app.clearAndDisplayHelpAndTasks(taskList)
+          app.setTaskList(taskList)
+          log(styles.successStyle(`Task ${taskName} deleted!`))
         } else {
           log(styles.warningStyle('Task delete aborted.'))
         }
