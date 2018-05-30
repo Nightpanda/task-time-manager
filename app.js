@@ -42,7 +42,8 @@ exports.addNote = (taskList, readInterface) => {
     let task = tasks.findTaskByIndex(taskIndex, taskList)
     if (task) {
       const taskName = task.name
-      readInterface.question(styles.questionStyle(`Write the note to add to the task ${taskName}: `), note => {
+      readInterface.question(styles.questionStyle('Write the note to add to the task ') +
+                             styles.highlightStyle(`${taskName}: `), note => {
         task.notes.push(note)
         this.clearAndDisplayHelpAndTasks(taskList)
         log(styles.successStyle(`Task ${taskName} now has notes:`))
