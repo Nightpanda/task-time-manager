@@ -1,13 +1,17 @@
 {
   "name": "task-time-manager",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Helper for tracking time between differents tasks.",
+  "preferGlobal": true,
   "main": "app.js",
   "scripts": {
     "start": "node -e 'require(\"./app.js\").runManager()'",
     "test": "nyc mocha",
     "precommit": "standard",
     "fix": "standard --fix"
+  },
+  "bin": {
+    "task-time-manager": "./bin/task-time-manager.js"
   },
   "husky": {
     "hooks": {
