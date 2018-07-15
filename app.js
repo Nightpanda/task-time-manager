@@ -92,8 +92,31 @@ exports.saveTasksToFile = (taskList, filename) => {
 }
 
 exports.writeTasks = (taskList, readInterface) => {
-  readInterface.question('What is the filename to write to? ', filename => {
+  return readInterface.question('What is the filename to write to? ', filename => {
     this.saveTasksToFile(taskList, filename)
+  })
+}
+
+exports.importTasksFromFile = (taskList, filename) => {
+  try {
+    const tasksFromFileString = fs.readFileSync(`./${filename}`).toString()
+    const tasksFromFile = tasksFromFileString.split('},{')
+    const taskListFromFile = tasksFromFile.map(task => {
+      if (task[0] !== '{') task = '{' + task
+      if (task.substr(-1) !== '}') task += '}'
+      return JSON.parse(task)
+    })
+    this.setTaskList(taskListFromFile)
+    log(styles.successStyle(`Tasks succesfully read tasks from file: ${filename}`))
+  } catch (err) {
+    log(styles.warningStyle(`Couldn't read tasks from file : ${filename}`))
+  }
+  return taskList
+}
+
+exports.importTasks = (taskList, readInterface) => {
+  return readInterface.question('What is the filename to import as tasklist? ', filename => {
+    return this.importTasksFromFile(taskList, filename)
   })
 }
 
@@ -143,6 +166,7 @@ const userInputs = {
   'p': {description: 'Prints a task report of time taken with notes.', command: taskList => this.displayReport(taskList)},
   'd': {description: 'Deletes a task.', command: (taskList, readInterface) => tasks.deleteTask(taskList, readInterface)},
   'w': {description: 'Save tasks to a file.', command: (taskList, readInterface) => this.writeTasks(taskList, readInterface)},
+  'i': {description: 'Imports previously saved tasks from a file.', command: (taskList, readInterface) => this.importTasks(taskList, readInterface)},
   't': {description: 'Set time for task.', command: (taskList, readInterface) => tasks.setTaskTime(taskList, readInterface)},
   'l': {description: 'Shows live feed of tasks.', command: taskList => this.switchLiveFeed(taskList)},
   'as': {description: 'Starts autosaving at given interval.', command: (taskList, readInterface) => this.switchAutosave(taskList, readInterface)},
